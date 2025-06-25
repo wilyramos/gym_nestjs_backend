@@ -6,6 +6,7 @@ import { UsersModule } from './users/users.module';
 import { MembershipsModule } from './memberships/memberships.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmConfig } from './config/typeorm.config';
+import { AuthModule } from './auth/auth.module';
  
 
 @Module({
@@ -17,7 +18,7 @@ import { typeOrmConfig } from './config/typeorm.config';
       useFactory: typeOrmConfig,
       inject: [ConfigService]
     }),
-    UsersModule, MembershipsModule,
+    UsersModule, MembershipsModule, AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
