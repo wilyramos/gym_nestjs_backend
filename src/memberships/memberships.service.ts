@@ -1,26 +1,52 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMembershipDto } from './dto/create-membership.dto';
 import { UpdateMembershipDto } from './dto/update-membership.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Membership } from './entities/membership.entity';
+import { Repository } from 'typeorm';
+
 
 @Injectable()
 export class MembershipsService {
-  create(createMembershipDto: CreateMembershipDto) {
-    return 'This action adds a new membership';
+
+  constructor(
+    @InjectRepository(Membership)
+    private membershipRepository: Repository<Membership>,
+  ) { }
+
+  async create(createMembershipDto: CreateMembershipDto) {
+
+    // Check if the membership already exists by name
+    const existingMembership = await this.membershipRepository.findOneBy({ name: createMembershipDto.name });
+    if (existingMembership) {
+      throw new ConflictException(`Membership with name ${createMembershipDto.name} already exists`);
+    }
+
+    const membership = this.membershipRepository.create(createMembershipDto);
+    return this.membershipRepository.save(membership);
+
   }
 
   findAll() {
-    return `This action returns all memberships`;
+    return this.membershipRepository.find();
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} membership`;
+    return this.membershipRepository.findOneBy({ id });
   }
 
-  update(id: number, updateMembershipDto: UpdateMembershipDto) {
-    return `This action updates a #${id} membership`;
+  async update(id: number, updateMembershipDto: UpdateMembershipDto) {
+    await this.membershipRepository.update(id, updateMembershipDto);
+    const updatedMembership = await this.membershipRepository.findOneBy({ id });
+    return {message : `Membership with id ${id} has been updated`};
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} membership`;
+  async remove(id: number) {
+    const membership = await this.membershipRepository.findOneBy({ id });
+    if (!membership) {
+      throw new NotFoundException(`Membership with id ${id} not found`);
+    }
+    await this.membershipRepository.delete(id);
+    return { message: `Membership with id ${id} has been deleted` };
   }
 }
