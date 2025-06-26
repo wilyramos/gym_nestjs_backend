@@ -18,10 +18,6 @@ export class Membership {
     @Column({ default: true })
     isActive: boolean; // Para activar/desactivar la membresía
 
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-    createdAt: Date;
-
-
     // Relation to User
     @OneToMany(() => User, user => user.membership)
     users: User[]; // Relación con los usuarios que tienen esta membresía

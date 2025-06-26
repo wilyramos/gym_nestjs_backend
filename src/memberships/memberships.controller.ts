@@ -16,8 +16,6 @@ export class MembershipsController {
   @Roles("ADMIN")
   create(@Body() createMembershipDto: CreateMembershipDto) {
 
-
-
     return this.membershipsService.create(createMembershipDto);
   }
 
@@ -32,11 +30,15 @@ export class MembershipsController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("ADMIN")
   update(@Param('id') id: string, @Body() updateMembershipDto: UpdateMembershipDto) {
     return this.membershipsService.update(+id, updateMembershipDto);
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("ADMIN")
   remove(@Param('id') id: string) {
     return this.membershipsService.remove(+id);
   }

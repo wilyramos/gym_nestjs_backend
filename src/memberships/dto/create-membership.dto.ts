@@ -24,8 +24,4 @@ export class CreateMembershipDto {
     @IsOptional()
     @IsBoolean()
     isActive?: boolean;
-
-    @IsOptional()
-    @IsDateString()
-    createdAt?: Date;
 }

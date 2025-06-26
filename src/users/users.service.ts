@@ -6,6 +6,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { Membership } from 'src/memberships/entities/membership.entity';
+import type { GetUsersQueryDto } from 'src/memberships/dto/get-product.dto';
 
 
 @Injectable()
@@ -13,9 +15,17 @@ export class UsersService {
 
     constructor(
         @InjectRepository(User) private usersRepository: Repository<User>,
+        @InjectRepository(Membership) private membershipRepository: Repository<Membership>,
     ) { }
 
     async create(createUserDto: CreateUserDto) {
+
+
+        // Check if the user already exists by email
+        const existingUser = await this.usersRepository.findOneBy({ email: createUserDto.email });
+        if (existingUser) {
+            throw new ConflictException(`User with email ${createUserDto.email} already exists`);
+        }
 
         // hash password before saving
 
@@ -25,28 +35,53 @@ export class UsersService {
             password: hashedPassword,
         })
 
-        // Check if the user already exists by email
-        const existingUser = await this.usersRepository.findOneBy({ email: createUserDto.email });
-        if (existingUser) {
-            throw new ConflictException(`User with email ${createUserDto.email} already exists`);
+        // If a membershipId is provided, link the user to the membership
+        if (createUserDto.membershipId) {
+            const membership = await this.membershipRepository.findOneBy({ id: createUserDto.membershipId });
+            if (!membership) {
+                throw new NotFoundException(`Membership with id ${createUserDto.membershipId} not found`);
+            }
+            user.membership = membership; // Assuming User entity has a 'membership' relation
+            user.membershipStartDate = createUserDto.membershipStartDate ?? new Date(); // Default to current date if not provided
+
+            const endDate = new Date(user.membershipStartDate);
+            endDate.setDate(endDate.getDate() + membership.durationInDays); // Assuming Membership entity has a 'durationInDays' field
+            user.membershipEndDate = endDate; // Set the end date based on the membership duration
         }
+
 
         return this.usersRepository.save(user);
     }
 
-    async findAll( page = 1, limit = 10) {
+    async findAll(query: GetUsersQueryDto) {
 
-       const [users, total] = await this.usersRepository.findAndCount({
-           skip: (page - 1) * limit,
-           take: limit,
-       });
+        const qb = this.usersRepository.createQueryBuilder('user');
 
-       return {
-           data: users,
-           total,
-           page,
-           last_page: Math.ceil(total / limit),
-       };
+        // If a query is provided, filter users by name or email
+        if (query.query) {
+            qb.where(
+                'user.name ILIKE :search OR user.email ILIKE :search OR user.dni ILIKE :search',
+                { search: `%${query.query}%` },
+            );
+        }
+
+
+        // order by id in descending order
+        qb.orderBy('user.id', 'DESC');
+
+        // Pagination
+        const page = query.page ? Number(query.page) : 1;
+        const limit = query.limit ? Number(query.limit) : 10;
+        qb.skip((page - 1) * limit).take(limit);
+
+        const [users, total] = await qb.getManyAndCount();
+
+        return {
+            users,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit),
+        };
     }
 
     async findOne(id: number) {
@@ -62,7 +97,7 @@ export class UsersService {
     async update(id: number, updateUserDto: UpdateUserDto) {
         const user = await this.findOne(id);
 
-        if( updateUserDto.email && updateUserDto.email !== user.email) {
+        if (updateUserDto.email && updateUserDto.email !== user.email) {
             // Check if the new email already exists
             const existingUser = await this.usersRepository.findOneBy({ email: updateUserDto.email });
             if (existingUser) {
@@ -89,7 +124,7 @@ export class UsersService {
     }
 
     async findByEmail(email: string) {
-        
+
         // get user by email and include password
         const user = await this.usersRepository.findOne({
             where: { email },

@@ -3,6 +3,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { IdValidationPipe } from '../common/pipes/id-validation/id-validation.pipe';
+import type { GetUsersQueryDto } from 'src/memberships/dto/get-product.dto';
 
 @Controller('users')
 export class UsersController {
@@ -16,11 +17,14 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
+  // @Get()
+  // findAll(@Query('page') page = 1, @Query('limit') limit = 10) {
+  //   return this.usersService.findAll(Number(page), Number(limit));
+  // }
   @Get()
-  findAll(@Query('page') page = 1, @Query('limit') limit = 10) {
-    return this.usersService.findAll(Number(page), Number(limit));
+  findAll(@Query() query: GetUsersQueryDto) {
+    return this.usersService.findAll(query);
   }
-
 
   @Get(':id')
   findOne(@Param('id', IdValidationPipe) id: number) {
