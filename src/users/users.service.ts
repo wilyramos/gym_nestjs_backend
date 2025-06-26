@@ -7,7 +7,7 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Membership } from 'src/memberships/entities/membership.entity';
-import type { GetUsersQueryDto } from 'src/memberships/dto/get-product.dto';
+import type { GetUsersQueryDto } from 'src/users/dto/get-users-query.dto';
 
 
 @Injectable()
@@ -55,6 +55,9 @@ export class UsersService {
 
     async findAll(query: GetUsersQueryDto) {
 
+
+        console.log('Query:', query.query);
+
         const qb = this.usersRepository.createQueryBuilder('user');
 
         // If a query is provided, filter users by name or email
@@ -86,7 +89,10 @@ export class UsersService {
 
     async findOne(id: number) {
 
-        const user = await this.usersRepository.findOneBy({ id });
+        const user = await this.usersRepository.findOne({
+            where: { id },
+            // relations: ['membership'],
+        });
         if (!user) {
             throw new NotFoundException(`User with id ${id} not found`);
         }
@@ -112,8 +118,20 @@ export class UsersService {
         user.role = updateUserDto.role || user.role;
         user.phone = updateUserDto.phone || user.phone;
 
-        await this.usersRepository.save(user);
+        // Update membership
+        if(updateUserDto.membershipId) {
+            const membership = await this.membershipRepository.findOneBy({ id: updateUserDto.membershipId });
+            if (!membership) {
+                throw new NotFoundException(`Membership with id ${updateUserDto.membershipId} not found`);
+            }
+            user.membership = membership; // Assuming User entity has a 'membership' relation
+            user.membershipStartDate = updateUserDto.membershipStartDate ?? new Date(); // Default to current date if not provided
 
+            const endDate = new Date(user.membershipStartDate);
+            endDate.setDate(endDate.getDate() + membership.durationInDays); // Assuming Membership entity has a 'durationInDays' field
+            user.membershipEndDate = endDate; // Set the end date based on the membership duration
+        }
+        await this.usersRepository.save(user);
         return { message: `User with id ${id} has been updated` };
     }
 

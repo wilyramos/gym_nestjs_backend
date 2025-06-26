@@ -3,7 +3,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { IdValidationPipe } from '../common/pipes/id-validation/id-validation.pipe';
-import type { GetUsersQueryDto } from 'src/memberships/dto/get-product.dto';
+import { GetUsersQueryDto } from './dto/get-users-query.dto';
 
 @Controller('users')
 export class UsersController {
@@ -22,9 +22,9 @@ export class UsersController {
   //   return this.usersService.findAll(Number(page), Number(limit));
   // }
   @Get()
-  findAll(@Query() query: GetUsersQueryDto) {
-    return this.usersService.findAll(query);
-  }
+  findAll(@Query() query: GetUsersQueryDto) { 
+  return this.usersService.findAll(query);
+}
 
   @Get(':id')
   findOne(@Param('id', IdValidationPipe) id: number) {
