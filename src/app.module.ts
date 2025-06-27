@@ -8,18 +8,20 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmConfig } from './config/typeorm.config';
 import { AuthModule } from './auth/auth.module';
 import { PaymentsModule } from './payments/payments.module';
+import { ExercisesModule } from './exercises/exercises.module';
+import { RoutinesModule } from './routines/routines.module';
  
 
 @Module({
   imports: [
      ConfigModule.forRoot({
       isGlobal: true,
-    }), // Global configuration module
+    }), // Global configuration modulep
     TypeOrmModule.forRootAsync({
       useFactory: typeOrmConfig,
       inject: [ConfigService]
     }),
-    UsersModule, MembershipsModule, AuthModule, PaymentsModule,
+    UsersModule, MembershipsModule, AuthModule, PaymentsModule, ExercisesModule, RoutinesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

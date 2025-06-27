@@ -1,10 +1,13 @@
+import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Membership } from 'src/memberships/entities/membership.entity';
+import { Routine } from 'src/routines/entities/routine.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   ManyToOne,
+  OneToMany,
 } from 'typeorm';
 
 
@@ -41,4 +44,8 @@ export class User {
 
   @Column({ type: 'timestamp', nullable: true })
   membershipEndDate?: Date;
+
+  // Relation to Routines
+  @OneToMany(() => Routine, (routine) => routine.user)
+  routines: Routine[];
 }
