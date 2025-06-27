@@ -15,4 +15,5 @@ export const typeOrmConfig = (configService: ConfigService): TypeOrmModuleOption
     logging: false,
     entities: [join(__dirname + '../../**/*.entity.{js,ts}')],
     synchronize: true, // Set to false in production
+    
 });

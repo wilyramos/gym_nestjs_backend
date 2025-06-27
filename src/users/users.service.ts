@@ -124,12 +124,15 @@ export class UsersService {
             if (!membership) {
                 throw new NotFoundException(`Membership with id ${updateUserDto.membershipId} not found`);
             }
-            user.membership = membership; // Assuming User entity has a 'membership' relation
-            user.membershipStartDate = updateUserDto.membershipStartDate ?? new Date(); // Default to current date if not provided
+            user.membership = membership;
 
-            const endDate = new Date(user.membershipStartDate);
-            endDate.setDate(endDate.getDate() + membership.durationInDays); // Assuming Membership entity has a 'durationInDays' field
-            user.membershipEndDate = endDate; // Set the end date based on the membership duration
+            if(updateUserDto.membershipStartDate){
+                user.membershipStartDate = updateUserDto.membershipStartDate;
+            }
+
+            if(updateUserDto.membershipEndDate){
+                user.membershipEndDate = updateUserDto.membershipEndDate;
+            }
         }
         await this.usersRepository.save(user);
         return { message: `User with id ${id} has been updated` };
