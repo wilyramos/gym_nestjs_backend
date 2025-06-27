@@ -33,7 +33,7 @@ export class User {
 
   // Relation to Membership
 
-  @ManyToOne(() => Membership, { eager: true, nullable: true })
+  @ManyToOne(() => Membership, { eager: false, nullable: true })
   membership?: Membership;
 
   @Column({ type: 'timestamp', nullable: true })

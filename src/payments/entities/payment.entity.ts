@@ -22,7 +22,7 @@ export class Payment {
     @ManyToOne(() => User, user => user.id, { eager: false })
     user: User;
 
-    @ManyToOne(() => Membership, {eager: true})
+    @ManyToOne(() => Membership, membership => membership.id, { eager: false })
     membership: Membership;
 
     

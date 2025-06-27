@@ -2,10 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Repository, type FindOptionsWhere } from 'typeorm';
 import { UsersService } from 'src/users/users.service';
 import { Payment } from './entities/payment.entity';
 import { MembershipsService } from 'src/memberships/memberships.service';
+import type { getPaymentsQueryDto } from './dto/get-payments-query.dto';
 
 
 @Injectable()
@@ -59,16 +60,59 @@ export class PaymentsService {
     await this.paymentsRepository.save(payment);
 
     return {
-      message: `Pago de ${amount} realizado con éxito para el usuario ${user.name}. Fecha de inicio: ${start.toISOString()}, Fecha de finalización: ${newEnd.toISOString()}`,      
+      message: `Pago de ${amount} realizado con éxito para el usuario ${user.name}. Fecha de inicio: ${start.toISOString()}, Fecha de finalización: ${newEnd.toISOString()}`,
     };
   }
 
-  findAll() {
-    return `This action returns all payments`;
+  async findAll(query: getPaymentsQueryDto) {
+
+    const { userId, method, startDate, endDate, page = 1, limit = 10 } = query;
+
+    console.log('Query:', query);
+
+    const where: FindOptionsWhere<Payment> = {};
+
+    if (userId) {
+      where.user = { id: Number(userId) };
+    }
+
+    if (method) {
+      where.method = method;
+    }
+
+    if (startDate) {
+      where.createdAt = Between(new Date(startDate), new Date(endDate || new Date()));
+    }
+
+    if (endDate) {
+      where.createdAt = Between(new Date(startDate || new Date()), new Date(endDate));
+    }
+
+    const [data, total] = await this.paymentsRepository.findAndCount({
+      where,
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+      relations: ['user'],
+    });
+
+    return {
+      data,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} payment`;
+  async findOne(id: number) {
+    const payment = await this.paymentsRepository.findOne({
+      where: { id },
+      relations: ['user', 'membership'],
+    });
+    if (!payment) {
+      throw new NotFoundException(`Payment with ID ${id} not found`);
+    }
+    return payment;
   }
 
   update(id: number, updatePaymentDto: UpdatePaymentDto) {
@@ -77,5 +121,32 @@ export class PaymentsService {
 
   remove(id: number) {
     return `This action removes a #${id} payment`;
+  }
+
+  findByUserId(userId: number, page: number = 1, limit: number = 10) {
+    return this.paymentsRepository.find({
+      where: { user: { id: userId } },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+      relations: ['membership'],
+    });
+  }
+
+  async findByUserIdPaginated(userId: number, page: number = 1, limit: number = 10) {
+
+    const [data, total] = await this.paymentsRepository.findAndCount({
+      where: { user: { id: userId } },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+      relations: ['membership'],
+    });
+    return {
+      data,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 }

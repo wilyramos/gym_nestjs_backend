@@ -11,8 +11,8 @@ export class CreatePaymentDto {
   @IsNumber()
   amount: number;
 
-  @IsEnum(['EFECTIVO', 'TARJETA', 'TRANSFERENCIA'])
-  method: 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA';
+  @IsEnum(['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'YAPE'])
+  method: 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA' | 'YAPE';
 
   @IsOptional()
   notes?: string;
