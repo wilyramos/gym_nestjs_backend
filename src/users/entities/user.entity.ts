@@ -1,11 +1,9 @@
-import { Roles } from 'src/auth/decorators/roles.decorator';
-import { Membership } from 'src/memberships/entities/membership.entity';
-import { Routine } from 'src/routines/entities/routine.entity';
+import { Membership } from '../../memberships/entities/membership.entity';
+import { Routine } from '../../routines/entities/routine.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
   ManyToOne,
   OneToMany,
 } from 'typeorm';

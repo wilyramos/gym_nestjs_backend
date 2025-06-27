@@ -1,7 +1,6 @@
-// src/routines/entities/routine-exercise.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { Routine } from './routine.entity';
-import { Exercise } from 'src/exercises/entities/exercise.entity';
+import { Exercise } from '../../exercises/entities/exercise.entity';
 
 @Entity()
 export class RoutineExercise {

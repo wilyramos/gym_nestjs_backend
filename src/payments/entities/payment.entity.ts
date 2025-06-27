@@ -1,5 +1,5 @@
-import { Membership } from "src/memberships/entities/membership.entity";
-import { User } from "src/users/entities/user.entity";
+import { Membership } from "../../memberships/entities/membership.entity";
+import { User } from "../../users/entities/user.entity";
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
@@ -23,7 +23,5 @@ export class Payment {
     user: User;
 
     @ManyToOne(() => Membership, membership => membership.id, { eager: false })
-    membership: Membership;
-
-    
+    membership: Membership;   
 }

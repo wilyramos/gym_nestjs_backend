@@ -11,3 +11,7 @@ async function bootstrap() {
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
+
+
+// TODO: servir imagenes estáticas desde el directorio 'public'
+// app.useStaticAssets(join(__dirname, '..', 'public'), {
