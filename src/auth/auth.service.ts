@@ -21,25 +21,30 @@ export class AuthService {
     ) { }
 
     async validateUser(email: string, password: string) {
-        const user = await this.usersService.findByEmail(email);
-        
-        if (!user || !user.password) {
+        try {
+            const user = await this.usersService.findByEmail(email);
+            const passwordValid = await bcrypt.compare(password, user.password);
+
+            if (!passwordValid) {
+                throw new UnauthorizedException('Correo o contraseña inválidos');
+            }
+
+            return user;
+        } catch (error) {
             throw new UnauthorizedException('Correo o contraseña inválidos');
         }
-
-        const passwordValid = await bcrypt.compare(password, user.password);
-
-        if (!passwordValid) {
-            throw new UnauthorizedException('Correo o contraseña inválidos');
-        }
-
-        return user;
     }
 
     async login(user: any) {
         const payload = { sub: user.id, role: user.role, email: user.email };
         return {
             access_token: this.jwtService.sign(payload),
+            user: {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                // Add other user properties as needed
+            }
         };
     }
 }
