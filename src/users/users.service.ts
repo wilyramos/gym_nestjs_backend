@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm'
 
 import { CreateUserDto } from './dto/create-user.dto';
@@ -20,7 +20,6 @@ export class UsersService {
 
     async create(createUserDto: CreateUserDto) {
 
-
         // Check if the user already exists by email
         const existingUser = await this.usersRepository.findOneBy({ email: createUserDto.email });
         if (existingUser) {
@@ -28,6 +27,10 @@ export class UsersService {
         }
 
         // hash password before saving
+
+        if (!createUserDto.password) {
+            throw new BadRequestException(`Password is required`);
+        }
 
         const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
         const user = this.usersRepository.create({
@@ -48,10 +51,59 @@ export class UsersService {
             endDate.setDate(endDate.getDate() + membership.durationInDays); // Assuming Membership entity has a 'durationInDays' field
             user.membershipEndDate = endDate; // Set the end date based on the membership duration
         }
+        return this.usersRepository.save(user);
+    }
 
+    // Create user by Admin
+
+    async createByAdmin(createUserDto: CreateUserDto) {
+        console.log('Creating user by admin with data:', createUserDto);
+
+        const { email, dni, membershipId, membershipStartDate } = createUserDto;
+
+        if (!dni) {
+            throw new BadRequestException(`El DNI es obligatorio y se usará como contraseña`);
+        }
+
+        // Buscar email y dni en paralelo
+        const [existingUserByEmail, existingUserByDni] = await Promise.all([
+            this.usersRepository.findOneBy({ email }),
+            this.usersRepository.findOneBy({ dni }),
+        ]);
+
+        if (existingUserByEmail) {
+            throw new ConflictException(`El usuario con el email ${email} ya existe`);
+        }
+
+        if (existingUserByDni) {
+            throw new ConflictException(`El usuario con el DNI ${dni} ya existe`);
+        }
+
+        // Usar el DNI como contraseña predeterminada
+        const hashedPassword = await bcrypt.hash(dni, 10);
+
+        const user = this.usersRepository.create({
+            ...createUserDto,
+            password: hashedPassword,
+        });
+
+        if (membershipId) {
+            const membership = await this.membershipRepository.findOneBy({ id: membershipId });
+            if (!membership) {
+                throw new NotFoundException(`Membership con ID ${membershipId} no existe`);
+            }
+
+            user.membership = membership;
+            user.membershipStartDate = membershipStartDate ?? new Date();
+
+            const endDate = new Date(user.membershipStartDate);
+            endDate.setDate(endDate.getDate() + membership.durationInDays);
+            user.membershipEndDate = endDate;
+        }
 
         return this.usersRepository.save(user);
     }
+
 
     async findAll(query: GetUsersQueryDto) {
 
@@ -66,6 +118,11 @@ export class UsersService {
                 'user.name ILIKE :search OR user.email ILIKE :search OR user.dni ILIKE :search',
                 { search: `%${query.query}%` },
             );
+        }
+
+        // If a role is provided, filter users by role
+        if (query.role) {
+            qb.andWhere('user.role = :role', { role: query.role });
         }
 
 
@@ -119,18 +176,18 @@ export class UsersService {
         user.phone = updateUserDto.phone || user.phone;
 
         // Update membership
-        if(updateUserDto.membershipId) {
+        if (updateUserDto.membershipId) {
             const membership = await this.membershipRepository.findOneBy({ id: updateUserDto.membershipId });
             if (!membership) {
                 throw new NotFoundException(`Membership with id ${updateUserDto.membershipId} not found`);
             }
             user.membership = membership;
 
-            if(updateUserDto.membershipStartDate){
+            if (updateUserDto.membershipStartDate) {
                 user.membershipStartDate = updateUserDto.membershipStartDate;
             }
 
-            if(updateUserDto.membershipEndDate){
+            if (updateUserDto.membershipEndDate) {
                 user.membershipEndDate = updateUserDto.membershipEndDate;
             }
         }

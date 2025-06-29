@@ -7,9 +7,10 @@ export class CreateUserDto {
     @IsEmail()
     email: string;
 
+    @IsOptional()
     @IsString()
     @MinLength(6)
-    password: string;
+    password?: string;
 
     @IsNumberString()
     @Length(8, 8, { message: 'DNI must be exactly 8 digits' })

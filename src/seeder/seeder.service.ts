@@ -20,7 +20,6 @@ export class SeederService {
         private membershipRepository: Repository<Membership>,
         
 
-        
         private dataSource: DataSource
     ) { }
 
@@ -64,5 +63,7 @@ export class SeederService {
         }
 
         console.log('✅ Siembra finalizada exitosamente.');
+
+        
     }
 }

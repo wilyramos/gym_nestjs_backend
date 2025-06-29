@@ -7,37 +7,47 @@ import { GetUsersQueryDto } from './dto/get-users-query.dto';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+    constructor(private readonly usersService: UsersService) { }
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
+    @Post()
+    create(@Body() createUserDto: CreateUserDto) {
 
-    console.log('Creating user with data:', createUserDto);
+        console.log('Creating user with data:', createUserDto);
 
-    return this.usersService.create(createUserDto);
-  }
+        return this.usersService.create(createUserDto);
+    }
 
-  // @Get()
-  // findAll(@Query('page') page = 1, @Query('limit') limit = 10) {
-  //   return this.usersService.findAll(Number(page), Number(limit));
-  // }
-  @Get()
-  findAll(@Query() query: GetUsersQueryDto) { 
-  return this.usersService.findAll(query);
-}
+    // Create user by Admin
+    @Post('admin')
+    createByAdmin(@Body() createUserDto: CreateUserDto) {
+        console.log('Creating user by admin with data:', createUserDto);
 
-  @Get(':id')
-  findOne(@Param('id', IdValidationPipe) id: number) {
-    return this.usersService.findOne(id);
-  }
+        return this.usersService.createByAdmin(createUserDto);
+    }
 
-  @Patch(':id')
-  update(@Param('id', IdValidationPipe) id: number, @Body() updateUserDto: UpdateUserDto) {
-    console.log('Updating user with ID:', id, 'and data:', updateUserDto);
-    return this.usersService.update(id, updateUserDto);
-  }
+    // @Get()
+    // findAll(@Query('page') page = 1, @Query('limit') limit = 10) {
+    //   return this.usersService.findAll(Number(page), Number(limit));
+    // }
+    @Get()
+    findAll(@Query() query: GetUsersQueryDto) {
 
-  @Delete(':id')
+        console.log('Finding all users with query:', query);
+        return this.usersService.findAll(query);
+    }
+
+    @Get(':id')
+    findOne(@Param('id', IdValidationPipe) id: number) {
+        return this.usersService.findOne(id);
+    }
+
+    @Patch(':id')
+    update(@Param('id', IdValidationPipe) id: number, @Body() updateUserDto: UpdateUserDto) {
+        console.log('Updating user with ID:', id, 'and data:', updateUserDto);
+        return this.usersService.update(id, updateUserDto);
+    }
+
+    @Delete(':id')
     remove(@Param('id', IdValidationPipe) id: number) {
         console.log('Removing user with ID:', id);
         return this.usersService.remove(id);

@@ -4,15 +4,6 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 
 
-
-type User = {
-    id?: string;
-    email: string;
-    password: string;
-    role?: string;
-    // Add other user properties as needed
-};
-
 @Injectable()
 export class AuthService {
     constructor(
@@ -23,6 +14,7 @@ export class AuthService {
     async validateUser(email: string, password: string) {
         try {
             const user = await this.usersService.findByEmail(email);
+            
             const passwordValid = await bcrypt.compare(password, user.password);
 
             if (!passwordValid) {

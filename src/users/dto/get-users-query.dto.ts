@@ -14,4 +14,8 @@ export class GetUsersQueryDto {
   @IsOptional()
   @IsNumberString()
   limit?: string;
+
+  @IsOptional()
+  @IsString()
+  role?: string; // Para filtrar por rol, si es necesario
 }
